@@ -48,7 +48,7 @@ class Treino(db.Model):
 
 
 class Pagamento(db.Model):
-    __tablename__ = "pagamentos"
+    _tablename_ = "pagamentos"
 
     id = db.Column(db.Integer, primary_key=True)
     aluno_id = db.Column(db.Integer, db.ForeignKey("alunos.id"), nullable=False)

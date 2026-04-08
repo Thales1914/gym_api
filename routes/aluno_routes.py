@@ -1,91 +1,68 @@
-routes/pagamento_routes.py
-
 from flask import Blueprint, request, jsonify
-from models import db, Pagamento, Aluno
+from models import db, Aluno
 
-pagamento_bp = Blueprint("pagamento_bp", __name__)
+aluno_bp = Blueprint("aluno_bp", __name__)
 
-
-@pagamento_bp.route("/", methods=["POST"])
-def criar_pagamento():
+@aluno_bp.route("/", methods=["POST"])
+def criar_aluno():
     dados = request.get_json()
-
     if not dados:
         return jsonify({"erro": "JSON não enviado"}), 400
 
-    campos_obrigatorios = ["aluno_id", "valor", "data_pagamento", "status", "metodo"]
-    for campo in campos_obrigatorios:
-        if campo not in dados:
-            return jsonify({"erro": f"Campo '{campo}' é obrigatório"}), 400
+    campos = ["nome", "email", "idade", "telefone"]
+    for c in campos:
+        if c not in dados:
+            return jsonify({"erro": f"Campo '{c}' é obrigatório"}), 400
 
-    aluno = Aluno.query.get(dados["aluno_id"])
-    if not aluno:
-        return jsonify({"erro": "Aluno não encontrado para vincular pagamento"}), 404
+    aluno_existente = Aluno.query.filter_by(email=dados["email"]).first()
+    if aluno_existente:
+        return jsonify({"erro": "Já existe um aluno com esse email"}), 400
 
-    novo_pagamento = Pagamento(
-        aluno_id=dados["aluno_id"],
-        valor=dados["valor"],
-        data_pagamento=dados["data_pagamento"],
-        status=dados["status"],
-        metodo=dados["metodo"]
+    novo = Aluno(
+        nome=dados["nome"],
+        email=dados["email"],
+        idade=dados["idade"],
+        telefone=dados["telefone"]
     )
-
-    db.session.add(novo_pagamento)
+    db.session.add(novo)
     db.session.commit()
+    return jsonify(novo.to_dict()), 201
 
-    return jsonify(novo_pagamento.to_dict()), 201
+@aluno_bp.route("/", methods=["GET"])
+def listar_alunos():
+    alunos = Aluno.query.all()
+    return jsonify([a.to_dict() for a in alunos]), 200
 
+@aluno_bp.route("/<int:id>", methods=["GET"])
+def buscar_aluno(id):
+    a = Aluno.query.get(id)
+    if not a:
+        return jsonify({"erro": "Aluno não encontrado"}), 404
+    return jsonify(a.to_dict()), 200
 
-@pagamento_bp.route("/", methods=["GET"])
-def listar_pagamentos():
-    pagamentos = Pagamento.query.all()
-    return jsonify([pagamento.to_dict() for pagamento in pagamentos]), 200
-
-
-@pagamento_bp.route("/<int:id>", methods=["GET"])
-def buscar_pagamento(id):
-    pagamento = Pagamento.query.get(id)
-
-    if not pagamento:
-        return jsonify({"erro": "Pagamento não encontrado"}), 404
-
-    return jsonify(pagamento.to_dict()), 200
-
-
-@pagamento_bp.route("/<int:id>", methods=["PUT"])
-def atualizar_pagamento(id):
-    pagamento = Pagamento.query.get(id)
-
-    if not pagamento:
-        return jsonify({"erro": "Pagamento não encontrado"}), 404
+@aluno_bp.route("/<int:id>", methods=["PUT"])
+def atualizar_aluno(id):
+    a = Aluno.query.get(id)
+    if not a:
+        return jsonify({"erro": "Aluno não encontrado"}), 404
 
     dados = request.get_json()
     if not dados:
         return jsonify({"erro": "JSON não enviado"}), 400
 
-    if "aluno_id" in dados:
-        aluno = Aluno.query.get(dados["aluno_id"])
-        if not aluno:
-            return jsonify({"erro": "Aluno não encontrado para vincular pagamento"}), 404
-        pagamento.aluno_id = dados["aluno_id"]
-
-    pagamento.valor = dados.get("valor", pagamento.valor)
-    pagamento.data_pagamento = dados.get("data_pagamento", pagamento.data_pagamento)
-    pagamento.status = dados.get("status", pagamento.status)
-    pagamento.metodo = dados.get("metodo", pagamento.metodo)
+    a.nome = dados.get("nome", a.nome)
+    a.email = dados.get("email", a.email)
+    a.idade = dados.get("idade", a.idade)
+    a.telefone = dados.get("telefone", a.telefone)
 
     db.session.commit()
-    return jsonify(pagamento.to_dict()), 200
+    return jsonify(a.to_dict()), 200
 
-
-@pagamento_bp.route("/<int:id>", methods=["DELETE"])
-def deletar_pagamento(id):
-    pagamento = Pagamento.query.get(id)
-
-    if not pagamento:
-        return jsonify({"erro": "Pagamento não encontrado"}), 404
-
-    db.session.delete(pagamento)
+@aluno_bp.route("/<int:id>", methods=["DELETE"])
+def deletar_aluno(id):
+    a = Aluno.query.get(id)
+    if not a:
+        return jsonify({"erro": "Aluno não encontrado"}), 404
+    db.session.delete(a)
     db.session.commit()
-
-    return jsonify({"mensagem": "Pagamento removido com sucesso"}), 200
+    return jsonify({"mensagem": "Aluno removido com sucesso"}), 200
