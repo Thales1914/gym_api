@@ -78,10 +78,11 @@ Resposta esperada:
 
 ## Testando no Insomnia
 
-Base URL:
+Base URLs:
 
 ```text
-http://127.0.0.1:5000
+Local: http://127.0.0.1:5000
+Deploy: https://gym-api-vf6c.onrender.com
 ```
 
 Para requisicoes `POST` e `PUT`, use `Body > JSON`.
@@ -192,6 +193,8 @@ Se um aluno possuir pagamentos vinculados, a exclusao do aluno retorna `409 Conf
 
 ## Deploy
 
-Deploy publico: pendente.
+Deploy publico:
 
-Atualize esta secao com a URL final apos publicar a API.
+```text
+https://gym-api-vf6c.onrender.com
+```
