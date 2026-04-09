@@ -3,10 +3,17 @@ from models import db, Treino
 
 treino_bp = Blueprint("treino_bp", __name__)
 
+
+def obter_json():
+    dados = request.get_json(silent=True)
+    if dados is None:
+        dados = request.get_json(force=True, silent=True)
+    return dados
+
 @treino_bp.route("/", methods=["POST"])
 def criar_treino():
     try:
-        dados = request.get_json()
+        dados = obter_json()
     except Exception:
         return jsonify({"erro": "JSON inválido"}), 400
     
@@ -55,7 +62,7 @@ def atualizar_treino(id):
         return jsonify({"erro": "Treino não encontrado"}), 404
 
     try:
-        dados = request.get_json()
+        dados = obter_json()
     except Exception:
         return jsonify({"erro": "JSON inválido"}), 400
     

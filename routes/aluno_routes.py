@@ -3,9 +3,16 @@ from models import db, Aluno
 
 aluno_bp = Blueprint("aluno_bp", __name__)
 
+
+def obter_json():
+    dados = request.get_json(silent=True)
+    if dados is None:
+        dados = request.get_json(force=True, silent=True)
+    return dados
+
 @aluno_bp.route("/", methods=["POST"])
 def criar_aluno():
-    dados = request.get_json()
+    dados = obter_json()
     if not dados:
         return jsonify({"erro": "JSON não enviado"}), 400
 
@@ -46,7 +53,7 @@ def atualizar_aluno(id):
     if not a:
         return jsonify({"erro": "Aluno não encontrado"}), 404
 
-    dados = request.get_json()
+    dados = obter_json()
     if not dados:
         return jsonify({"erro": "JSON não enviado"}), 400
 
@@ -63,6 +70,12 @@ def deletar_aluno(id):
     a = Aluno.query.get(id)
     if not a:
         return jsonify({"erro": "Aluno não encontrado"}), 404
+
+    if a.pagamentos:
+        return jsonify({
+            "erro": "Aluno possui pagamentos vinculados e não pode ser removido"
+        }), 409
+
     db.session.delete(a)
     db.session.commit()
     return jsonify({"mensagem": "Aluno removido com sucesso"}), 200

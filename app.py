@@ -1,11 +1,9 @@
-app.py
-
 from flask import Flask
 from flask_cors import CORS
 from models import db
 from routes.aluno_routes import aluno_bp
 from routes.treino_routes import treino_bp
-from routes.pagamento_routes import pagamento_bp
+from routes.pagamentos_routes import pagamento_bp
 
 app = Flask(__name__)
 CORS(app)

@@ -5,9 +5,16 @@ from models import db, Pagamento, Aluno
 pagamento_bp = Blueprint("pagamento_bp", __name__)
 
 
+def obter_json():
+    dados = request.get_json(silent=True)
+    if dados is None:
+        dados = request.get_json(force=True, silent=True)
+    return dados
+
+
 @pagamento_bp.route("/", methods=["POST"])
 def criar_pagamento():
-    dados = request.get_json()
+    dados = obter_json()
 
     if not dados:
         return jsonify({"erro": "JSON não enviado"}), 400
@@ -58,7 +65,7 @@ def atualizar_pagamento(id):
     if not pagamento:
         return jsonify({"erro": "Pagamento não encontrado"}), 404
 
-    dados = request.get_json()
+    dados = obter_json()
     if not dados:
         return jsonify({"erro": "JSON não enviado"}), 400
 

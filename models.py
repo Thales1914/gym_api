@@ -1,5 +1,3 @@
-models.py
-
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -48,7 +46,7 @@ class Treino(db.Model):
 
 
 class Pagamento(db.Model):
-    _tablename_ = "pagamentos"
+    __tablename__ = "pagamento"
 
     id = db.Column(db.Integer, primary_key=True)
     aluno_id = db.Column(db.Integer, db.ForeignKey("alunos.id"), nullable=False)
