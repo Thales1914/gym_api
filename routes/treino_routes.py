@@ -13,22 +13,22 @@ def criar_treino():
     if not dados:
         return jsonify({"erro": "JSON não enviado"}), 400
 
-    campos = ["nome", "descricao", "duracao", "nivel", "instrutor"]
-    for c in campos:
-        if c not in dados:
-            return jsonify({"erro": f"Campo '{c}' é obrigatório"}), 400
+    campos_obrigatorios = ["nome", "descricao", "duracao", "nivel", "instrutor"]
+    for campo in campos_obrigatorios:
+        if campo not in dados:
+            return jsonify({"erro": f"Campo '{campo}' é obrigatório"}), 400
 
     try:
-        novo = Treino(
+        novo_treino = Treino(
             nome=dados["nome"],
             descricao=dados["descricao"],
             duracao=dados["duracao"],
             nivel=dados["nivel"],
             instrutor=dados["instrutor"]
         )
-        db.session.add(novo)
+        db.session.add(novo_treino)
         db.session.commit()
-        return jsonify(novo.to_dict()), 201
+        return jsonify(novo_treino.to_dict()), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"erro": "Erro ao criar treino", "detalhes": str(e)}), 500
@@ -37,21 +37,21 @@ def criar_treino():
 def listar_treinos():
     try:
         treinos = Treino.query.all()
-        return jsonify([t.to_dict() for t in treinos]), 200
+        return jsonify([treino.to_dict() for treino in treinos]), 200
     except Exception as e:
         return jsonify({"erro": "Erro ao listar treinos", "detalhes": str(e)}), 500
 
 @treino_bp.route("/<int:id>", methods=["GET"])
 def buscar_treino(id):
-    t = Treino.query.get(id)
-    if not t:
+    treino = Treino.query.get(id)
+    if not treino:
         return jsonify({"erro": "Treino não encontrado"}), 404
-    return jsonify(t.to_dict()), 200
+    return jsonify(treino.to_dict()), 200
 
 @treino_bp.route("/<int:id>", methods=["PUT"])
 def atualizar_treino(id):
-    t = Treino.query.get(id)
-    if not t:
+    treino = Treino.query.get(id)
+    if not treino:
         return jsonify({"erro": "Treino não encontrado"}), 404
 
     try:
@@ -62,27 +62,27 @@ def atualizar_treino(id):
     if not dados:
         return jsonify({"erro": "JSON não enviado"}), 400
 
-    t.nome = dados.get("nome", t.nome)
-    t.descricao = dados.get("descricao", t.descricao)
-    t.duracao = dados.get("duracao", t.duracao)
-    t.nivel = dados.get("nivel", t.nivel)
-    t.instrutor = dados.get("instrutor", t.instrutor)
+    treino.nome = dados.get("nome", treino.nome)
+    treino.descricao = dados.get("descricao", treino.descricao)
+    treino.duracao = dados.get("duracao", treino.duracao)
+    treino.nivel = dados.get("nivel", treino.nivel)
+    treino.instrutor = dados.get("instrutor", treino.instrutor)
 
     try:
         db.session.commit()
-        return jsonify(t.to_dict()), 200
+        return jsonify(treino.to_dict()), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"erro": "Erro ao atualizar treino", "detalhes": str(e)}), 500
 
 @treino_bp.route("/<int:id>", methods=["DELETE"])
 def deletar_treino(id):
-    t = Treino.query.get(id)
-    if not t:
+    treino = Treino.query.get(id)
+    if not treino:
         return jsonify({"erro": "Treino não encontrado"}), 404
     
     try:
-        db.session.delete(t)
+        db.session.delete(treino)
         db.session.commit()
         return jsonify({"mensagem": "Treino removido com sucesso"}), 200
     except Exception as e:
