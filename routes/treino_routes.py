@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, Treino
+from auth_middleware import token_required
 
 treino_bp = Blueprint("treino_bp", __name__)
 
@@ -11,6 +12,7 @@ def obter_json():
     return dados
 
 @treino_bp.route("/", methods=["POST"])
+@token_required
 def criar_treino():
     try:
         dados = obter_json()
@@ -41,6 +43,7 @@ def criar_treino():
         return jsonify({"erro": "Erro ao criar treino", "detalhes": str(e)}), 500
 
 @treino_bp.route("/", methods=["GET"])
+@token_required
 def listar_treinos():
     try:
         treinos = Treino.query.all()
@@ -49,6 +52,7 @@ def listar_treinos():
         return jsonify({"erro": "Erro ao listar treinos", "detalhes": str(e)}), 500
 
 @treino_bp.route("/<int:id>", methods=["GET"])
+@token_required
 def buscar_treino(id):
     treino = Treino.query.get(id)
     if not treino:
@@ -56,6 +60,7 @@ def buscar_treino(id):
     return jsonify(treino.to_dict()), 200
 
 @treino_bp.route("/<int:id>", methods=["PUT"])
+@token_required
 def atualizar_treino(id):
     treino = Treino.query.get(id)
     if not treino:
@@ -83,6 +88,7 @@ def atualizar_treino(id):
         return jsonify({"erro": "Erro ao atualizar treino", "detalhes": str(e)}), 500
 
 @treino_bp.route("/<int:id>", methods=["DELETE"])
+@token_required
 def deletar_treino(id):
     treino = Treino.query.get(id)
     if not treino:

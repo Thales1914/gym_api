@@ -1,6 +1,7 @@
 
 from flask import Blueprint, request, jsonify
 from models import db, Pagamento, Aluno
+from auth_middleware import token_required
 
 pagamento_bp = Blueprint("pagamento_bp", __name__)
 
@@ -13,6 +14,7 @@ def obter_json():
 
 
 @pagamento_bp.route("/", methods=["POST"])
+@token_required
 def criar_pagamento():
     dados = obter_json()
 
@@ -43,12 +45,14 @@ def criar_pagamento():
 
 
 @pagamento_bp.route("/", methods=["GET"])
+@token_required
 def listar_pagamentos():
     pagamentos = Pagamento.query.all()
     return jsonify([pagamento.to_dict() for pagamento in pagamentos]), 200
 
 
 @pagamento_bp.route("/<int:id>", methods=["GET"])
+@token_required
 def buscar_pagamento(id):
     pagamento = Pagamento.query.get(id)
 
@@ -59,6 +63,7 @@ def buscar_pagamento(id):
 
 
 @pagamento_bp.route("/<int:id>", methods=["PUT"])
+@token_required
 def atualizar_pagamento(id):
     pagamento = Pagamento.query.get(id)
 
@@ -85,6 +90,7 @@ def atualizar_pagamento(id):
 
 
 @pagamento_bp.route("/<int:id>", methods=["DELETE"])
+@token_required
 def deletar_pagamento(id):
     pagamento = Pagamento.query.get(id)
 
