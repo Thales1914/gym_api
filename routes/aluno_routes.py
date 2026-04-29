@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, Aluno
-from auth import requer_auth
+from auth_middleware import token_required
 
 aluno_bp = Blueprint("aluno_bp", __name__)
 
@@ -13,7 +13,7 @@ def obter_json():
 
 
 @aluno_bp.route("/", methods=["POST"])
-@requer_auth
+@token_required
 def criar_aluno():
     dados = obter_json()
     if not dados:
@@ -40,14 +40,14 @@ def criar_aluno():
 
 
 @aluno_bp.route("/", methods=["GET"])
-@requer_auth
+@token_required
 def listar_alunos():
     alunos = Aluno.query.all()
     return jsonify([a.to_dict() for a in alunos]), 200
 
 
 @aluno_bp.route("/<int:id>", methods=["GET"])
-@requer_auth
+@token_required
 def buscar_aluno(id):
     a = Aluno.query.get(id)
     if not a:
@@ -56,7 +56,7 @@ def buscar_aluno(id):
 
 
 @aluno_bp.route("/<int:id>", methods=["PUT"])
-@requer_auth
+@token_required
 def atualizar_aluno(id):
     a = Aluno.query.get(id)
     if not a:
@@ -76,7 +76,7 @@ def atualizar_aluno(id):
 
 
 @aluno_bp.route("/<int:id>", methods=["DELETE"])
-@requer_auth
+@token_required
 def deletar_aluno(id):
     a = Aluno.query.get(id)
     if not a:
