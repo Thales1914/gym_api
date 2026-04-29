@@ -11,6 +11,7 @@ def obter_json():
         dados = request.get_json(force=True, silent=True)
     return dados
 
+
 @aluno_bp.route("/", methods=["POST"])
 @token_required
 def criar_aluno():
@@ -37,11 +38,13 @@ def criar_aluno():
     db.session.commit()
     return jsonify(novo.to_dict()), 201
 
+
 @aluno_bp.route("/", methods=["GET"])
 @token_required
 def listar_alunos():
     alunos = Aluno.query.all()
     return jsonify([a.to_dict() for a in alunos]), 200
+
 
 @aluno_bp.route("/<int:id>", methods=["GET"])
 @token_required
@@ -50,6 +53,7 @@ def buscar_aluno(id):
     if not a:
         return jsonify({"erro": "Aluno não encontrado"}), 404
     return jsonify(a.to_dict()), 200
+
 
 @aluno_bp.route("/<int:id>", methods=["PUT"])
 @token_required
@@ -69,6 +73,7 @@ def atualizar_aluno(id):
 
     db.session.commit()
     return jsonify(a.to_dict()), 200
+
 
 @aluno_bp.route("/<int:id>", methods=["DELETE"])
 @token_required
