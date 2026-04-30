@@ -14,10 +14,6 @@ from auth_middleware import token_required
 auth_bp = Blueprint("auth_bp", __name__)
 
 
-# ──────────────────────────────────────────────
-#  Helper functions
-# ──────────────────────────────────────────────
-
 def obter_json():
     dados = request.get_json(silent=True)
     if dados is None:
@@ -26,7 +22,6 @@ def obter_json():
 
 
 def hash_password(password):
-    """Hash a password using bcrypt."""
     return bcrypt.hashpw(
         password.encode("utf-8"),
         bcrypt.gensalt()
@@ -34,7 +29,6 @@ def hash_password(password):
 
 
 def check_password(password, password_hash):
-    """Verify a password against its bcrypt hash."""
     return bcrypt.checkpw(
         password.encode("utf-8"),
         password_hash.encode("utf-8")
@@ -42,7 +36,6 @@ def check_password(password, password_hash):
 
 
 def generate_token(user_id, secret_key, expires_hours=1):
-    """Generate a JWT access token."""
     payload = {
         "user_id": user_id,
         "exp": datetime.utcnow() + timedelta(hours=expires_hours),
@@ -52,7 +45,6 @@ def generate_token(user_id, secret_key, expires_hours=1):
 
 
 def generate_qr_base64(provisioning_uri):
-    """Generate a base64-encoded PNG QR code from a TOTP provisioning URI."""
     qr = qrcode.make(provisioning_uri)
     buffer = io.BytesIO()
     qr.save(buffer, format="PNG")
@@ -60,13 +52,8 @@ def generate_qr_base64(provisioning_uri):
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 
-# ──────────────────────────────────────────────
-#  Registration & Login
-# ──────────────────────────────────────────────
-
 @auth_bp.route("/register", methods=["POST"])
 def register():
-    """Register a new user with username, email, and password."""
     dados = obter_json()
     if not dados:
         return jsonify({"erro": "JSON não enviado"}), 400
@@ -76,7 +63,6 @@ def register():
         if c not in dados:
             return jsonify({"erro": f"Campo '{c}' é obrigatório"}), 400
 
-    # Check for existing username or email
     if User.query.filter_by(username=dados["username"]).first():
         return jsonify({"erro": "Username já está em uso"}), 409
 
@@ -100,13 +86,6 @@ def register():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    """
-    Authenticate a user.
-
-    - If MFA is disabled: returns a JWT token on valid credentials.
-    - If MFA is enabled and no totp_code provided: returns mfa_required flag.
-    - If MFA is enabled and totp_code provided: verifies TOTP, then returns JWT.
-    """
     dados = obter_json()
     if not dados:
         return jsonify({"erro": "JSON não enviado"}), 400
@@ -122,7 +101,6 @@ def login():
     if not user or not check_password(password, user.password_hash):
         return jsonify({"erro": "Credenciais inválidas"}), 401
 
-    # ── MFA flow ──
     if user.mfa_enabled:
         if not totp_code:
             return jsonify({
@@ -134,7 +112,6 @@ def login():
         if not totp.verify(totp_code):
             return jsonify({"erro": "Código MFA inválido"}), 401
 
-    # ── Generate token ──
     token = generate_token(user.id, current_app.config["SECRET_KEY"])
 
     return jsonify({
@@ -144,36 +121,24 @@ def login():
     }), 200
 
 
-# ──────────────────────────────────────────────
-#  MFA Management (all require authentication)
-# ──────────────────────────────────────────────
-
 @auth_bp.route("/mfa/enable", methods=["POST"])
 @token_required
 def mfa_enable():
-    """
-    Step 1 of MFA setup: generates a TOTP secret and returns
-    the provisioning URI + QR code. MFA is NOT active yet —
-    the user must confirm with /mfa/verify.
-    """
     from flask import g
     user = g.current_user
 
     if user.mfa_enabled:
         return jsonify({"erro": "MFA já está ativado para este usuário"}), 400
 
-    # Generate a new TOTP secret
     secret = pyotp.random_base32()
     user.mfa_secret = secret
     db.session.commit()
 
-    # Build the provisioning URI (works with Google Authenticator, Authy, etc.)
     provisioning_uri = pyotp.TOTP(secret).provisioning_uri(
         name=user.email,
         issuer_name="GymAPI"
     )
 
-    # Generate QR code as base64
     qr_base64 = generate_qr_base64(provisioning_uri)
 
     return jsonify({
@@ -186,10 +151,6 @@ def mfa_enable():
 @auth_bp.route("/mfa/verify", methods=["POST"])
 @token_required
 def mfa_verify():
-    """
-    Step 2 of MFA setup: confirms the TOTP code from the
-    authenticator app and activates MFA on the account.
-    """
     from flask import g
     user = g.current_user
 
@@ -219,10 +180,6 @@ def mfa_verify():
 @auth_bp.route("/mfa/disable", methods=["POST"])
 @token_required
 def mfa_disable():
-    """
-    Disables MFA on the account. Requires the current password
-    and a valid TOTP code for security.
-    """
     from flask import g
     user = g.current_user
 
@@ -259,6 +216,5 @@ def mfa_disable():
 @auth_bp.route("/me", methods=["GET"])
 @token_required
 def get_current_user():
-    """Returns the authenticated user's profile."""
     from flask import g
     return jsonify({"user": g.current_user.to_dict()}), 200

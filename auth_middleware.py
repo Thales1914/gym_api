@@ -5,17 +5,6 @@ from models import User
 
 
 def token_required(f):
-    """
-    Decorator that protects routes by requiring a valid JWT token.
-    The authenticated user is stored in flask.g.current_user.
-    
-    Usage:
-        @app.route("/protected")
-        @token_required
-        def protected_route():
-            user = g.current_user
-            ...
-    """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
@@ -39,7 +28,6 @@ def token_required(f):
             if not current_user:
                 return jsonify({"erro": "Usuário não encontrado"}), 401
 
-            # Store the authenticated user in Flask's request-scoped g object
             g.current_user = current_user
 
         except jwt.ExpiredSignatureError:
